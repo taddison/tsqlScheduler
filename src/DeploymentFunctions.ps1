@@ -4,19 +4,21 @@ Function Install-SchedulerSolution
     Param (
         $server = "localhost"
         ,$database = "tsqlscheduler"
-        # False = AG deployment
+        # False = Standalone deployment
         ,$agMode = $false 
     )
 
     $files = @('./Schema/scheduler.sql')
 
     if($agMode) {
-        $files += './Tables/Task_AG.sql'    
+        $files += './Tables/Task_AG.sql'
+        $files += './Tables/ReplicaStatus.sql'
     } else {
         $files += './Tables/Task_Standalone.sql'
     }
     $files += './Tables/TaskExecution.sql'
     $files += './Functions/GetAvailabilityGroupRole.sql'
+    $files += './Functions/GetCachedAvailabilityGroupRole.sql'
     $files += './Functions/GetVersion.sql'
     $files += './Procedures/SetContextInfo.sql'
     $files += './Procedures/CreateAgentJob.sql'
@@ -58,6 +60,24 @@ Function Install-AutoUpsertJob (
         ( Identifier, TSQLCommand, StartTime, FrequencyType, FrequencyInterval, NotifyOnFailureOperator, IsNotifyOnFailure )
         values
         ( '$jobIdentifier', 'exec $TargetDatabase.scheduler.UpsertJobsForAllTasks', '00:00', 3, 10, '$NotifyOperator', 0 );"
+
+    Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
+    Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query "exec scheduler.CreateJobFromTask @identifier = '$jobIdentifier', @overwriteExisting = 1;"
+}
+
+Function Install-ReplicaStatusJob (
+    $Server = "localhost"
+    ,$Database = "tsqlscheduler"
+    ,$AvailabilityGroup = "TESTAG"
+    ,$NotifyOperator = "Test Operator"
+)
+{
+    $jobIdentifier = $Database + "-RecordReplicaStatus"
+    $query = "
+        insert into scheduler.Task
+        ( Identifier, TSQLCommand, StartTime, FrequencyType, FrequencyInterval, AvailabilityGroup, AvailabilityGroupRole, NotifyOnFailureOperator, IsNotifyOnFailure )
+        values
+        ( '$jobIdentifier', 'exec $Database.scheduler.UpdateReplicaStatus', '00:00', 3, 1, '$AvailabilityGroup', 'PRIMARY-NOCACHE', '$NotifyOperator', 0 );"
 
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query "exec scheduler.CreateJobFromTask @identifier = '$jobIdentifier', @overwriteExisting = 1;"

@@ -76,9 +76,9 @@ Function Install-ReplicaStatusJob (
     $jobIdentifier = $Database + "-RecordReplicaStatus"
     $query = "
         insert into scheduler.Task
-        ( Identifier, TSQLCommand, StartTime, FrequencyType, FrequencyInterval, AvailabilityGroup, AvailabilityGroupRole, NotifyOnFailureOperator, IsNotifyOnFailure )
+        ( Identifier, TSQLCommand, StartTime, FrequencyType, FrequencyInterval, AvailabilityGroup, IsCachedRoleCheck, NotifyOnFailureOperator, IsNotifyOnFailure )
         values
-        ( '$jobIdentifier', 'exec $Database.scheduler.UpdateReplicaStatus @availabilityGroup = `"$AvailabilityGroup`" ', '00:00', 3, 1, '$AvailabilityGroup', 'PRIMARY-NOCACHE', '$NotifyOperator', 0 );"
+        ( '$jobIdentifier', 'exec $Database.scheduler.UpdateReplicaStatus @availabilityGroup = `"$AvailabilityGroup`" ', '00:00', 3, 1, '$AvailabilityGroup', 0, '$NotifyOperator', 0 );"
 
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query "exec scheduler.CreateJobFromTask @identifier = '$jobIdentifier', @overwriteExisting = 1;"

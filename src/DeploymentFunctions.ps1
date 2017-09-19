@@ -26,6 +26,7 @@ Function Install-SchedulerSolution
     $files += './Procedures/DeleteAgentJob.sql'
     $files += './Procedures/ExecuteTask.sql'
     $files += './Procedures/RemoveJobFromTask.sql'
+    $files += './Procedures/UpdateReplicaStatus.sql'
     $files += './Procedures/UpsertJobsForAllTasks.sql'
     $files += './Views/CurrentlyExecutingTasks.sql'
 
@@ -77,7 +78,7 @@ Function Install-ReplicaStatusJob (
         insert into scheduler.Task
         ( Identifier, TSQLCommand, StartTime, FrequencyType, FrequencyInterval, AvailabilityGroup, AvailabilityGroupRole, NotifyOnFailureOperator, IsNotifyOnFailure )
         values
-        ( '$jobIdentifier', 'exec $Database.scheduler.UpdateReplicaStatus', '00:00', 3, 1, '$AvailabilityGroup', 'PRIMARY-NOCACHE', '$NotifyOperator', 0 );"
+        ( '$jobIdentifier', 'exec $Database.scheduler.UpdateReplicaStatus @availabilityGroup = `"$AvailabilityGroup`" ', '00:00', 3, 1, '$AvailabilityGroup', 'PRIMARY-NOCACHE', '$NotifyOperator', 0 );"
 
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query "exec scheduler.CreateJobFromTask @identifier = '$jobIdentifier', @overwriteExisting = 1;"

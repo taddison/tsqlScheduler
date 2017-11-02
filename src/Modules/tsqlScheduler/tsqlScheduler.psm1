@@ -8,32 +8,14 @@ Function Install-SchedulerSolution
         ,[string] $availabilityGroup
     )
 
-    $files = @('./Schema/scheduler.sql')
+    $deployMode = if($agMode){"IsAGMode"}else{"IsStandaloneMode"}
+    $compileInclude = Import-Csv ..\deploy\compileInclude.csv
 
-    if($agMode) {
-        $files += './Tables/Task_AG.sql'
-        $files += './Tables/ReplicaStatus.sql'
-        $files += './Procedures/ExecuteTask_AG.sql'
-        $files += './Functions/GetAvailabilityGroupRole.sql'
-        $files += './Functions/GetCachedAvailabilityGroupRole.sql'
-        $files += './Procedures/UpdateReplicaStatus.sql'
-    } else {
-        $files += './Tables/Task_Standalone.sql'
-        $files += './Procedures/ExecuteTask_Standalone.sql'
-    }
-    $files += './Tables/TaskExecution.sql'
-    $files += './Functions/GetVersion.sql'
-    $files += './Procedures/SetContextInfo.sql'
-    $files += './Procedures/CreateAgentJob.sql'
-    $files += './Procedures/CreateJobFromTask.sql'
-    $files += './Procedures/DeleteAgentJob.sql'
-    $files += './Procedures/RemoveJobFromTask.sql'
-    $files += './Procedures/UpsertJobsForAllTasks.sql'
-    $files += './Views/CurrentlyExecutingTasks.sql'
+    $files += $compileInclude | Where-Object { $_."$deployMode" -match $true } 
 
     $files | foreach-object { 
-        Write-Verbose $_
-        Invoke-SqlCmd -ServerInstance $server -Database $database -InputFile $_ 
+        Write-Verbose $_.fileName
+        Invoke-SqlCmd -ServerInstance $server -Database $database -InputFile $_.fileName 
     }
 
     $instanceGuid = [System.Guid]::NewGuid().ToString()

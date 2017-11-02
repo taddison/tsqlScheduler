@@ -85,6 +85,25 @@ Function Install-ReplicaStatusJob
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query "exec scheduler.CreateJobFromTask @identifier = '$jobIdentifier', @overwriteExisting = 1;"
 }
 
+Function UnInstall-SchedulerSolution
+{
+    [cmdletbinding()]
+    Param (
+        [string] $Server
+        ,[string] $Database
+    )
+
+    $query = "update scheduler.task set IsDeleted = 1;"
+    Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
+
+    $query = "exec scheduler.UpsertJobsForAllTasks;"
+    Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
+
+    $query = Get-Content "RemoveAllObjects.sql" | Out-String
+    Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
+}
+
 Export-ModuleMember Install-SchedulerSolution
 Export-ModuleMember Install-AutoUpsertJob
 Export-ModuleMember Install-ReplicaStatusJob
+Export-ModuleMember UnInstall-SchedulerSolution

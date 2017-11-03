@@ -14,6 +14,7 @@ $message = "Are you deploying to an Availability Group or a Single Instance?
 Your selection"
 
 # Allow common-sense input
+if ($deployMode -eq "HA") {$deployMode = 1}
 if ($deployMode -eq "AG") {$deployMode = 1}
 if ($deployMode -eq "Availability Group") {$deployMode = 1}
 if ($deployMode -eq "SI") {$deployMode = 2}
@@ -54,13 +55,22 @@ Please get your Server Name ready..."
 
 Write-Host `n$message
 
-# for typos, give the user a chance to panic & CTRL+C
-# Start-Sleep 3
-
 ..\deploy\setInput -agMode $agMode
 
-..\deploy\testInput -agMode $agMode -agName $agName -server $server -replica $replica -notifyOperator $notifyOperator -database $database -agDatabase $agDatabase
+..\deploy\testInput -agMode $agMode -agName $agName -server $server -notifyOperator $notifyOperator -database $database -agDatabase $agDatabase
 
 Import-Module .\Modules\tsqlScheduler
 
-..\deploy\deploy.standalone -server $server -database $database -notifyOperator $notifyOperator
+if($globalErrorCount -eq 0) {
+    $message = "All inputs passed validation. Deploying in 5 seconds...`n"
+    Write-Host $message
+
+    # CTRL+C point
+    Start-Sleep 5
+
+    ..\deploy\deploy.standalone -server $server -database $database -notifyOperator $notifyOperator
+    #if($agMode){..\deploy\deploy.standalone}
+} else {
+    $message = "Inputs did not pass validation. Deploy aborted."
+    throw $message
+}

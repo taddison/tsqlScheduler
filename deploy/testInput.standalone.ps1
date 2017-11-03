@@ -34,3 +34,4 @@ if($validation.notify_operator_id -eq -1){
 
 if($errorCount -gt 0){throw $message}
 
+$global:globalErrorCount += $errorCount

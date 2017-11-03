@@ -8,5 +8,10 @@
     {
         "Name": "Server2",
         "Role": "Secondary"
+    },
+    {
+        "Name": "Server3",
+        "Role": "Secondary",
+        "IsSchedulerExcluded":true
     }]
 }

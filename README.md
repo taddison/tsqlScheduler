@@ -1,8 +1,10 @@
 # tsqlScheduler
 
+When running an Availability Group installation, you may wish to have the Server Agent execute Jobs against your highly available databases. However in the event of failover these Tasks will not exist by default on the replica. Additionally if you modify a Job on the primary replica, keeping parity on each secondary replica requires a separate action. This module automates parity of Server Agent Jobs across all replicas and makes Tasks executed by these Jobs Highly Available alongside any HA database.  
+
 Create agent jobs from definitions stored in SQL tables.  Currently supports the following features:
 
-- Schedule tasks to run on a schedule every day, or every N hours/minutes/seconds
+- Schedule tasks to run on a schedule every day, or every `N` hours/minutes/seconds
 - Automatically create a SQL Agent job from each task (stored in a Task table)
 - Provide logging of task execution history (runtime, success/failure, error messages)
 - Conditional execution of tasks based on replica status - if an availability group is linked to a task that task will only run when that node is the primary replica
@@ -66,29 +68,23 @@ primaryNode, secondaryNode
 
 Key here is that the two standalone deployments will both periodically call into agDatabase and invoke the upsert stored procedure, creating agent jobs for that AG on both nodes.  Note that this requires the AG to have readable secondaries.
 
-### Standalone (Instance) Mode
+## Standalone (Instance) Mode
+
+While the Scheduler is developed for use in an AG environment, it is possible to administer your Server Agent in a single-instance environment as well.  
 
 - Clone the repository
 - Open a powershell session and change to the src folder
-- Import the powershell module that contains the install scripts
-- Deploy the solution in standalone mode against the target instance
-- Deploy the AutoUpsert task on the instance
-  - The notify operator must exist on the instance or the job will not be created.
+- Execute `..\deploy\deploy "Single Instance"` 
 
-```powershell
-Import-Module .\Modules\tsqlscheduler
-
-# Deploy in standalone mode
-Install-SchedulerSolution -Server primaryNode -Database Utility -agMode $false
-Install-AutoUpsertJob -Server primaryNode -Database Utility -TargetDatabase Utility -NotifyOperator "Test Operator"
-```
 
 ### Notes
 
-- Deployment scripts assume you will use integrated security.  If you need to use SQL Logins then you need to edit the DeployAllObjects.ps1 script.
+<!-- TODO: correct below. DeployAllObjects.ps1 does not currently exist -->
+<!-- - Deployment scripts assume you will use integrated security.  If you need to use SQL Logins then you need to edit the DeployAllObjects.ps1 script.-->
 - The solution will be deployed into the scheduler schema.
 - The script requires SQL 2016 SP1.
-- The objects can be removed with the RemoveAllObjects SQL script.  Note that this will remove the objects but not any SQL Agent jobs which have been created.
+- The objects can be removed with the [RemoveAllObjects](src/RemoveAllObjects.sql) SQL script.  Note that this will remove the objects but not any SQL Agent jobs which have been created.
+	- You can also execute the Powershell command `UnInstall-SchedulerSolution` and specify the Server and Database to remove all objects including Agent Jobs
 
 ## Managing Tasks
 

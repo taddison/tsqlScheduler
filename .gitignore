@@ -1,0 +1,3 @@
+
+deploy/servers/*
+!deploy/servers/AvailabilityGroup.sample.json

@@ -17,30 +17,7 @@ This is intended as an administrative tool and as such requires and will schedul
 
 - Clone the repository
 - Open a powershell session and change to the src folder
-- Import the powershell module that contains the install scripts
-- Deploy the solution in AG mode against a database in the AG
-- Deploy the solution in standalone mode against every instance which can host the primary replica (not in an AG database)
-- Deploy the AutoUpsert task on all nodes which can host the AG
-  - The notify operator must exist on the instance or the job will not be created
-- Deploy the UpdateReplicaStatus job against the AG solution
-
-```powershell
-Import-Module .\Modules\tsqlscheduler
-
-# Deploy once in AG mode
-Install-SchedulerSolution -Server primaryNode -Database agDatabase -agMode $true -AvailabilityGroup AGName
-
-# Deploy once potential primary per-node in standalone mode (needed once per node only, not once per AG)
-Install-SchedulerSolution -Server primaryNode -Database Utility -agMode $false
-Install-SchedulerSolution -Server secondaryNode -Database Utility -agMode $false
-
-# Create the job on every node that can host the primary
-Install-AutoUpsertJob -Server primaryNode -Database Utility -TargetDatabase agDatabase -NotifyOperator "Test Operator"
-Install-AutoUpsertJob -Server secondaryNode -Database Utility -TargetDatabase agDatabase -NotifyOperator "Test Operator"
-
-# Create the job that keeps track of the replica status
-Install-ReplicaStatusJob -Server primaryNode -Database agDatabase -NotifyOperator "Test Operator"
-```
+- Execute `..\deploy\deploy "Availability Group"` 
 
 If an instance hosts multiple availability groups, the Utility database would need to contain one AutoUpsert task for every AG.
 
@@ -68,7 +45,7 @@ primaryNode, secondaryNode
 
 Key here is that the two standalone deployments will both periodically call into agDatabase and invoke the upsert stored procedure, creating agent jobs for that AG on both nodes.  Note that this requires the AG to have readable secondaries.
 
-## Standalone (Instance) Mode
+### Standalone (Instance) Mode
 
 While the Scheduler is developed for use in an AG environment, it is possible to administer your Server Agent in a single-instance environment as well.  
 

@@ -14,7 +14,7 @@ select server_major_version=serverproperty('ProductMajorVersion'),
              where o.name = '$notifyOperator'),-1);"
 
 foreach($replica in $replicas){
-    $serverName = $_.Name
+    $serverName = $replica.Name
     ..\deploy\testInput.standalone -server $serverName -database $agDatabase -notifyOperator $notifyOperator
 }
 

@@ -1,7 +1,7 @@
 ﻿Param(
-    [string] $server
-    ,[string] $database
-    ,[string] $notifyOperator
+    [string][parameter(mandatory=$true)] $server
+    ,[string][parameter(mandatory=$true)] $database
+    ,[string][parameter(mandatory=$true)] $notifyOperator
 )
 
 Install-SchedulerSolution -Server $server -Database $database -agMode $false

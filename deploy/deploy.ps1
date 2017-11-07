@@ -57,19 +57,25 @@ Write-Host `n$message
 
 ..\deploy\setInput -agMode $agMode
 
-..\deploy\testInput -agMode $agMode -agName $agName -server $server -notifyOperator $notifyOperator -database $database -agDatabase $agDatabase
+..\deploy\testInput -agMode $agMode -agName $agName -server $server -notifyOperator $notifyOperator -database $database -agDatabase $agDatabase -replicas $replicas
 
 Import-Module .\Modules\tsqlScheduler
 
 if($globalErrorCount -eq 0) {
     $message = "All inputs passed validation. Deploying in 5 seconds...`n"
-    Write-Host $message
-
     # CTRL+C point
-    Start-Sleep 5
-
-    ..\deploy\deploy.standalone -server $server -database $database -notifyOperator $notifyOperator
-    #if($agMode){..\deploy\deploy.standalone}
+    Write-Host $message 
+    
+    if($agMode){
+        Write-Host "Deploying HIGH-AVAILABILITY."
+        Start-Sleep 5
+        ..\deploy\deploy.ag -agName $agName -replicas $replicas -server $server -database $database -agDatabase $agDatabase -notifyOperator $notifyOperator 
+    }
+    else {
+        Write-Host "Deploying STANDALONE."
+        Start-Sleep 5
+        ..\deploy\deploy.standalone -server $server -database $database -notifyOperator $notifyOperator
+    }
 } else {
     $message = "Inputs did not pass validation. Deploy aborted."
     throw $message

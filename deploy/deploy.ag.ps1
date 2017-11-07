@@ -11,7 +11,13 @@ Install-SchedulerSolution -Server $server -Database $agDatabase -agMode $true -A
 
 foreach($replica in $replicas){
     $serverName = $replica.Name
-    Install-SchedulerSolution -server $serverName -database $database -agMode $false
+
+    $query = "select oid = isnull(object_id('scheduler.Task'),-1)"
+    $validation = Invoke-Sqlcmd -ServerInstance $serverName -Database $database -Query $query
+
+    if($validation.oid -eq -1){
+        Install-SchedulerSolution -server $serverName -database $database -agMode $false
+    }
     Install-AutoUpsertJob -server $serverName -database $database -TargetDatabase $agDatabase -notifyOperator $notifyOperator
 }
 

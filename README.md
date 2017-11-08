@@ -56,11 +56,17 @@ While the Scheduler is developed for use in an AG environment, it is possible to
 
 ### Notes & Requirements
 
-- Deployment scripts assume you will use integrated security.  Use of SQL Logins has not been tested but can most easily be applied but adding the appropriate [`Invoke-SqlCmd`][invoke-sqlcmd - BOL] flags in the [tsqlScheduler module](src/Modulers/tsqlScheduler/tsqlScheduler.psm1) and [deploying manually](deploy/README.md).
+- Deployment scripts assume you will use integrated security.  Use of SQL Logins has not been tested but can be attempted but adding the appropriate [`Invoke-SqlCmd`][invoke-sqlcmd - BOL] flags in the [tsqlScheduler module](src/Modulers/tsqlScheduler/tsqlScheduler.psm1) and [deploying manually](deploy/README.md).
 - The solution will be deployed into the `scheduler` schema.
 - The script requires SQL 2016 SP1.
 - The objects can be removed with the [RemoveAllObjects](src/RemoveAllObjects.sql) SQL script.  Note that this will remove the objects but not any SQL Agent jobs which have been created.
 	- You can also execute the Powershell command `UnInstall-SchedulerSolution` and specify the Server and Database to remove all objects including Agent Jobs
+- Conform your job names (`@jobIdentifier`) to the pattern `$ownLocation-$target-$task`
+	- e.g. - an AutoUpsert job deployed for `AG1-sample` would be named `Utility-agDatabase-UpsertJobsForAllTasks`
+- Renaming of jobs is not supported. You will need to delete (set `IsDeleted=1`) and re-create the task. 
+- Do not deploy jobs to the HA scheduler with any dependencies outside the AG. These jobs will not succeed after failover unless the dependencies are available at the failover location.
+	- Likewise, any replicas excluded from the scheduler will not have Jobs executing on the event of failover
+- On the event of failover, currently running HA Jobs may forcibly fail.  
 
 ## Managing Tasks
 

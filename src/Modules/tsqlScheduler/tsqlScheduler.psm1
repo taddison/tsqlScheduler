@@ -54,7 +54,15 @@ Function Install-AutoUpsertJob
         ,[string] $NotifyOperator
     )
 
-    $jobIdentifier = $TargetDatabase + "-UpsertJobsForAllTasks"
+    # conform to naming convention of $ownLocation-$target-$task
+    # but do not double-prefix self-reference/standalone AutUpsert jobs
+    if($Database -eq $TargetDatabase){
+        $prefix = $TargetDatabase
+    }else{
+        $prefix = $Database + "-" + $TargetDatabase
+    }
+
+    $jobIdentifier = $prefix + "-UpsertJobsForAllTasks"
     $query = "
         insert into scheduler.Task
         ( Identifier, TSQLCommand, StartTime, FrequencyType, FrequencyInterval, NotifyOnFailureOperator, IsNotifyOnFailure )

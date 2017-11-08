@@ -56,6 +56,7 @@ While the Scheduler is developed for use in an AG environment, it is possible to
 
 ### Notes & Requirements
 
+- Both `Utility` and `agDatabase` DBs must be created and added as necessary to the AG before Installation or uninstallation. This module neither `CREATE`s nor `DROP`s databases nor executes commands against an AG at any point. 
 - Deployment scripts assume you will use integrated security.  Use of SQL Logins has not been tested but can be attempted but adding the appropriate [`Invoke-SqlCmd`][invoke-sqlcmd - BOL] flags in the [tsqlScheduler module](src/Modulers/tsqlScheduler/tsqlScheduler.psm1) and [deploying manually](deploy/README.md).
 - The solution will be deployed into the `scheduler` schema.
 - The script requires SQL 2016 SP1.

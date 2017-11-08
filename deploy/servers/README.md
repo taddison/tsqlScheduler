@@ -4,7 +4,7 @@ You can create your own AG config file by executing the below query on your AG.
 	
 ```sql
 declare 
-	@agName sysname = 'AvailabilityGroup.sample',
+	@agName sysname = 'AG1-sample',
 	@agid uniqueidentifier;
 
 select @agid = ag.group_id
@@ -23,3 +23,5 @@ for json path;
 ```
 
 Simply add `"IsSchedulerExcluded":true` for any replica which you do wish to deploy the HA Scheduler Solution. 
+
+The AG config file should be saved in *this directory location*: `~/deploy/servers`. For our example, the AG is named `AG1-sample` and it's config file is [`AG1-sample.json`](/AG1-sample.json).

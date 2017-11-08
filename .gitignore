@@ -1,4 +1,4 @@
 
 deploy/servers/*
-!deploy/servers/AvailabilityGroup.sample.json
+!deploy/servers/AG1-sample.json
 !deploy/servers/README.md

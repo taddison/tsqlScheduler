@@ -1,5 +1,6 @@
 ﻿param (
     [parameter(position=1)] $deployMode 
+    ,[string][parameter(position=2)] $agName 
 )
 
 $currentDirectory = (Get-Item -Path ".\" -Verbose).FullName
@@ -45,8 +46,12 @@ while(($selection -ne 1) -and ($selection -ne 2))
 
 if($selection -eq 1) {
     $agMode = $true
-    $message = "Deploying in AVAILABILITY GROUP mode...`n
-Please get your AG Name ready..."
+    $message = "Deploying in AVAILABILITY GROUP mode...`n"
+    if($agName -eq $null){
+        $message+="Please get your AG Name ready..."
+    }else{
+        $message+="...to AG Name: [$agName]."
+    }
 }else{
     $agMode = $false
     $message = "Deploying to a SINGLE INSTANCE...`n
@@ -55,7 +60,7 @@ Please get your Server Name ready..."
 
 Write-Host `n$message
 
-..\deploy\setInput -agMode $agMode
+..\deploy\setInput -agMode $agMode -agName $agName
 
 ..\deploy\testInput -agMode $agMode -agName $agName -server $server -notifyOperator $notifyOperator -database $database -agDatabase $agDatabase -replicas $replicas
 

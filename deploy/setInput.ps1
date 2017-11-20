@@ -1,10 +1,17 @@
 ﻿# setInput
 param(
     [boolean][parameter(mandatory=$true)] $agMode
+    ,[string] $agName
 ) 
 $global:agMode=$agMode
 
-if($agMode){$global:agName=Read-Host "Enter the AG name"}else{$global:agName="x"} # dummy non-zero string for testInput
+if($agMode){
+    if($agName -eq $null){
+        $global:agName=Read-Host "Enter the AG name"
+    }else{
+        $global:agName=$agName
+    }
+}else{$global:agName="x"} # dummy non-zero string for testInput
 
 if($agMode){
     $configFileExists=Test-Path ..\deploy\servers\$agName.json

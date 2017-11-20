@@ -97,18 +97,39 @@ Function UnInstall-SchedulerSolution
 {
     [cmdletbinding()]
     Param (
-        [string] $Server
+        [string] $agName
+        ,[string] $Server
         ,[string] $Database
     )
+    
+    $setTaskDeletedQuery = "update scheduler.task set IsDeleted = 1;"
+    $deleteAllHAJobsQuery = "exec scheduler.UpsertJobsForAllTasks;"
+    $removeAllObjectsQuery = Get-Content "RemoveAllObjects.sql" | Out-String
 
-    $query = "update scheduler.task set IsDeleted = 1;"
-    Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
+    if($agName -ne $null){
+        ..\deploy\setInput -agMode $true -agName $agName
+    }else{$agMode=$false}
 
-    $query = "exec scheduler.UpsertJobsForAllTasks;"
-    Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
+    $deleteLocalUpsertJobQuery="update top(1) scheduler.task set IsDeleted = 1 where Identifier='$Database-$agDatabase-UpsertJobsForAllTasks';"
 
-    $query = Get-Content "RemoveAllObjects.sql" | Out-String
-    Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
+    if($agMode){
+        $Server=($replicas | Where-Object "Role" -eq "Primary").Name
+        Invoke-SqlCmd -ServerInstance $Server -Database $agDatabase -Query $setTaskDeletedQuery
+
+        foreach($replica in $replicas){
+            Invoke-SqlCmd -ServerInstance $replica.Name -Database $agDatabase -Query $deleteAllHAJobsQuery
+            Invoke-SqlCmd -ServerInstance $replica.Name -Database $Database -Query $deleteLocalUpsertJobQuery
+        }
+
+        Invoke-SqlCmd -ServerInstance $Server -Database $agDatabase -Query $removeAllObjectsQuery
+    }else{ # Single instance uninstall
+        if($Server -eq $null){$Server=Read-Host "Enter the server name"}
+        if($Database -eq $null){$Database=Read-Host "Enter the database name"}
+        
+        Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $setTaskDeletedQuery
+        Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $deleteAllHAJobsQuery
+        Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $removeAllObjectsQuery
+    }
 }
 
 Export-ModuleMember Install-SchedulerSolution

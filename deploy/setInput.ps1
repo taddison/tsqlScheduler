@@ -2,14 +2,34 @@
 param(
     [boolean][parameter(mandatory=$true)] $agMode
 ) 
-
-$global:server=Read-Host "Enter the local server name"
-$global:database=Read-Host "Enter the local database name"
-$global:notifyOperator=Read-Host "Enter the name of the operator"
+$global:agMode=$agMode
 
 if($agMode){$global:agName=Read-Host "Enter the AG name"}else{$global:agName="x"} # dummy non-zero string for testInput
-if($agMode){$global:agDatabase=Read-Host "Enter the name of the HIGHLY AVAILABLE database"}else{$global:agDatabase="x"}
+
 if($agMode){
-    $ag = Get-Content ..\deploy\servers\$agName.json | ConvertFrom-Json
+    $configFileExists=Test-Path ..\deploy\servers\$agName.json
+    if($configFileExists -eq $false){..\deploy\createConfigFile} # Currently a STUB!
+}
+if($agMode){$global:ag = Get-Content ..\deploy\servers\$agName.json | ConvertFrom-Json}
+if($agMode){
     $global:replicas = $ag.replicas | Where-Object {$_.IsSchedulerExcluded -ne $true}
 }else{$global:replicas="x"}
+
+# initialize vars
+$global:agDatabase=$null
+$global:server=$null
+$global:database=$null
+$global:notifyOperator=$null
+
+..\deploy\tryParseVars
+
+if($agMode){
+    while($agDatabase -eq $null){
+        Write-Host "agDatabase cannot be NULL."
+        $global:agDatabase=Read-Host "Enter the name of the HIGHLY AVAILABLE database"
+    }
+}
+
+if($server -eq $null){$global:server=Read-Host "Enter the local server name"}
+if($database -eq $null){$global:database=Read-Host "Enter the local database name"}
+if($notifyOperator -eq $null){$global:notifyOperator=Read-Host "Enter the name of the operator"}

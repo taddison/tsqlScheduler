@@ -64,10 +64,16 @@ Function Install-AutoUpsertJob
 
     $jobIdentifier = $prefix + "-UpsertJobsForAllTasks"
     $query = "
-        insert into scheduler.Task
-        ( Identifier, TSQLCommand, StartTime, FrequencyType, FrequencyInterval, NotifyOnFailureOperator, IsNotifyOnFailure )
-        values
-        ( '$jobIdentifier', 'exec $TargetDatabase.scheduler.UpsertJobsForAllTasks', '00:00', 3, 10, '$NotifyOperator', 0 );"
+exec scheduler.UpsertTask
+    @action = 'INSERT', 
+    @jobIdentifier = '$jobIdentifier', 
+    @tsqlCommand = N'exec $TargetDatabase.scheduler.UpsertJobsForAllTasks;', 
+    @startTime = '00:00', 
+    @frequencyType = 3, 
+    @frequencyInterval = 1, 
+    @notifyOperator = '$NotifyOperator', 
+    @isNotifyOnFailure = 0,
+    @overwriteExisting = 1;" # allow error-free redeploy of same AG after logical delete of local upsert job
 
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query "exec scheduler.CreateJobFromTask @identifier = '$jobIdentifier', @overwriteExisting = 1;"
@@ -84,10 +90,15 @@ Function Install-ReplicaStatusJob
 
     $jobIdentifier = $Database + "-RecordReplicaStatus"
     $query = "
-        insert into scheduler.Task
-        ( Identifier, TSQLCommand, StartTime, FrequencyType, FrequencyInterval, IsCachedRoleCheck, NotifyOnFailureOperator, IsNotifyOnFailure )
-        values
-        ( '$jobIdentifier', 'exec $Database.scheduler.UpdateReplicaStatus', '00:00', 3, 1, 0, '$NotifyOperator', 0 );"
+exec scheduler.UpsertTask
+    @action = 'INSERT', 
+    @jobIdentifier = '$jobIdentifier', 
+    @tsqlCommand = N'exec $Database.scheduler.UpdateReplicaStatus;', 
+    @startTime = '00:00', 
+    @frequencyType = 3, 
+    @frequencyInterval = 1, 
+    @notifyOperator = '$NotifyOperator', 
+    @isNotifyOnFailure = 0;"
 
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query "exec scheduler.CreateJobFromTask @identifier = '$jobIdentifier', @overwriteExisting = 1;"
@@ -98,19 +109,19 @@ Function UnInstall-SchedulerSolution
     [cmdletbinding()]
     Param (
         [string] $agName
+        ,[boolean] $agMode=$true
         ,[string] $Server
         ,[string] $Database
     )
-    
+
     $setTaskDeletedQuery = "update scheduler.task set IsDeleted = 1;"
     $deleteAllHAJobsQuery = "exec scheduler.UpsertJobsForAllTasks;"
     $removeAllObjectsQuery = Get-Content "RemoveAllObjects.sql" | Out-String
 
-    if($agName -ne $null){
-        ..\deploy\setInput -agMode $true -agName $agName
-    }else{$agMode=$false}
-
-    $deleteLocalUpsertJobQuery="update top(1) scheduler.task set IsDeleted = 1 where Identifier='$Database-$agDatabase-UpsertJobsForAllTasks';"
+    if($agMode){
+        ..\deploy\setInput -agMode $agMode -agName $agName
+        $deleteLocalUpsertJobQuery="update top(1) scheduler.task set IsDeleted = 1 where Identifier='$Database-$agDatabase-UpsertJobsForAllTasks';"
+    }
 
     if($agMode){
         $Server=($replicas | Where-Object "Role" -eq "Primary").Name
@@ -122,10 +133,7 @@ Function UnInstall-SchedulerSolution
         }
 
         Invoke-SqlCmd -ServerInstance $Server -Database $agDatabase -Query $removeAllObjectsQuery
-    }else{ # Single instance uninstall
-        if($Server -eq $null){$Server=Read-Host "Enter the server name"}
-        if($Database -eq $null){$Database=Read-Host "Enter the database name"}
-        
+    }else{ 
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $setTaskDeletedQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $deleteAllHAJobsQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $removeAllObjectsQuery

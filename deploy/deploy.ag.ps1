@@ -16,8 +16,12 @@ foreach($replica in $replicas){
     $validation = Invoke-Sqlcmd -ServerInstance $serverName -Database $database -Query $query
 
     if($validation.oid -eq -1){
-        Install-SchedulerSolution -server $serverName -database $database -agMode $false
+        Install-SchedulerSolution -server $serverName -database $database -agMode $false -verbose
+    }else{
+        # nonbreaking update functions/views/procs on local DB at redeploy
+        Install-SchedulerSolution -server $serverName -database $database -agMode $false -versionBump $true -verbose
     }
+
     Install-AutoUpsertJob -server $serverName -database $database -TargetDatabase $agDatabase -notifyOperator $notifyOperator
 }
 

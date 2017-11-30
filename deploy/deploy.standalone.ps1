@@ -4,5 +4,5 @@
     ,[string][parameter(mandatory=$true)] $notifyOperator
 )
 
-Install-SchedulerSolution -Server $server -Database $database -agMode $false
+Install-SchedulerSolution -Server $server -Database $database -agMode $false -verbose
 Install-AutoUpsertJob -Server $server -Database $database -TargetDatabase $database -NotifyOperator $notifyOperator

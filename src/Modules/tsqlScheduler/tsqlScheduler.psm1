@@ -6,12 +6,20 @@ Function Install-SchedulerSolution
         ,[string] $database
         ,[boolean] $agMode = $false
         ,[string] $availabilityGroup
+        ,[boolean] $versionBump = $false
     )
 
     $deployMode = if($agMode){"IsAGMode"}else{"IsStandaloneMode"}
     $compileInclude = Import-Csv ..\deploy\compileInclude.csv
 
-    $files += $compileInclude | Where-Object { $_."$deployMode" -match $true } 
+    if($versionBump){
+        $files += $compileInclude | Where-Object { 
+            ($_."$deployMode" -match $true) -and
+            (($_.fileName).StartsWith(".\Tables") -eq $false) # ignore stateful data objs on version bump
+        }
+    }else{
+        $files += $compileInclude | Where-Object { $_."$deployMode" -match $true } 
+    }
 
     $files | foreach-object { 
         Write-Verbose $_.fileName
@@ -125,17 +133,27 @@ Function UnInstall-SchedulerSolution
 
     if($agMode){
         $Server=($replicas | Where-Object "Role" -eq "Primary").Name
+        Write-Verbose $setTaskDeletedQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $agDatabase -Query $setTaskDeletedQuery
 
         foreach($replica in $replicas){
+            Write-Verbose $_.Name
+            Write-Verbose $agDatabase
             Invoke-SqlCmd -ServerInstance $replica.Name -Database $agDatabase -Query $deleteAllHAJobsQuery
+            Write-Verbose $Database
             Invoke-SqlCmd -ServerInstance $replica.Name -Database $Database -Query $deleteLocalUpsertJobQuery
         }
 
+        Write-Verbose "Removing all objects..."
         Invoke-SqlCmd -ServerInstance $Server -Database $agDatabase -Query $removeAllObjectsQuery
     }else{ 
+        Write-Verbose $Server
+        Write-Verbose $Database
+        Write-Verbose $setTaskDeletedQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $setTaskDeletedQuery
+        Write-Verbose $deleteAllHAJobsQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $deleteAllHAJobsQuery
+        Write-Verbose "Removing all objects..."
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $removeAllObjectsQuery
     }
 }

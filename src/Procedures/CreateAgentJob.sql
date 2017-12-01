@@ -20,7 +20,7 @@ begin
 		,@ACTIVE_START_DATE int = datepart(year,getutcdate()) * 10000 + datepart(month,getutcdate()) * 100 + datepart(day,getutcdate());
 
     declare 
-        @frequencyTypeNum tinyint = scheduler.FrequencyDescFromType( @frequencyType ),
+        @frequencyTypeNum tinyint = scheduler.FrequencyTypeFromDesc( @frequencyType ),
         @IsValidTask bit = 1,
         @Comments nvarchar(max),
         @ErrorMsg nvarchar(max) = N'',
@@ -30,7 +30,7 @@ begin
         @IsValidTask = tv.IsValidTask,
         @Comments = tv.Comments,
         @existingJobId = tv.ExistingJobID
-    from scheduler.TaskValidation (
+    from scheduler.ValidateTaskProfile (
         null,
         @jobName,
         @command,

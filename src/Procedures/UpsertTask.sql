@@ -39,6 +39,14 @@ begin;
             @ErrorMsg += 'At least one of @taskId or @jobIdentifier must be specified. ' + char(10);
     end;
  
+    if @taskId is not null 
+        and @action = 'INSERT'
+    begin;
+         select
+            @ErrCount += 1,
+            @ErrorMsg += '@taskId may not be specified if requested @action is [INSERT]. ' + char(10);
+    end;
+
     if @action not in ('INSERT','UPDATE','DELETE') or @action is null
     begin;
         select 
@@ -56,7 +64,11 @@ begin;
                      from scheduler.Task t
                      where t.Identifier = @jobIdentifier )
     begin;
-        set @action = 'UPDATE';
+        select 
+            @action = 'UPDATE',
+            @taskId = TaskId
+        from scheduler.Task
+        where Identifier = @jobIdentifier;
     end;
 
     if @ErrCount > 0

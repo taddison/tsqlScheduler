@@ -21,10 +21,16 @@ Function Install-SchedulerSolution
         $files += $compileInclude | Where-Object { $_."$deployMode" -match $true } 
     }
 
+    Write-Verbose ">>>>>>> $server"
+    Write-Verbose ">>>>>>> $database"
+    Write-Verbose "--------------------------------------------------------------------"
+
     $files | foreach-object { 
         Write-Verbose $_.fileName
         Invoke-SqlCmd -ServerInstance $server -Database $database -InputFile $_.fileName 
     }
+
+    Write-Verbose "--------------------------------------------------------------------"
 
     $instanceGuid = [System.Guid]::NewGuid().ToString()
     $instanceFunction = @"

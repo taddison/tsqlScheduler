@@ -15,7 +15,7 @@ if($agMode){
 
 if($agMode){
     $configFileExists=Test-Path ..\deploy\servers\$agName.json
-    if($configFileExists -eq $false){..\deploy\createConfigFile} # Currently a STUB!
+    if($configFileExists -eq $false){..\deploy\createConfigFile} 
 }
 if($agMode){$global:ag = Get-Content ..\deploy\servers\$agName.json | ConvertFrom-Json}
 if($agMode){

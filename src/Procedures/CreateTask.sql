@@ -8,7 +8,7 @@ create or alter proc scheduler.CreateTask
     @notifyOperator    sysname,
     @isNotifyOnFailure bit = 1,
     @IsEnabled         bit = 1,
-    @IsCachedRoleCheck bit = 1,
+--    @IsCachedRoleCheck bit = 1,
     @IsDeleted         bit = 0
 as
 begin
@@ -23,7 +23,7 @@ begin
            NotifyOnFailureOperator,
            IsNotifyOnFailure,
            IsEnabled,
-           IsCachedRoleCheck, 
+--           IsCachedRoleCheck, 
            IsDeleted )
     select Identifier              = @jobIdentifier,
            TSQLCommand             = @tsqlCommand,
@@ -33,7 +33,7 @@ begin
            NotifyOnFailureOperator = @notifyOperator,
            IsNotifyOnFailure       = @isNotifyOnFailure,
            IsEnabled               = @IsEnabled,
-           IsCachedRoleCheck       = @IsCachedRoleCheck,
+           --IsCachedRoleCheck       = @IsCachedRoleCheck,
            IsDeleted               = @IsDeleted;
     
     return;

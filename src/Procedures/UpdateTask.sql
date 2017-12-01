@@ -9,7 +9,7 @@ create or alter proc scheduler.UpdateTask
     @notifyOperator    sysname,
     @isNotifyOnFailure bit = 1,
     @IsEnabled         bit = 0,
-    @IsCachedRoleCheck bit = 1,
+    --@IsCachedRoleCheck bit = 1,
     @IsDeleted         bit = 1
 as
 begin
@@ -55,7 +55,7 @@ begin
             NotifyOnFailureOperator = @notifyOperator,
             IsNotifyOnFailure       = @isNotifyOnFailure,
             IsEnabled               = @IsEnabled,
-            IsCachedRoleCheck       = @IsCachedRoleCheck,
+            --IsCachedRoleCheck       = @IsCachedRoleCheck,
             IsDeleted               = @IsDeleted
         where TaskId = @taskId;
     

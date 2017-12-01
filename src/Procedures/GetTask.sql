@@ -49,7 +49,7 @@ begin;
 +nchar(10)+'    ,@notifyOperator = N'''    +convert(nvarchar(max),NotifyOnFailureOperator)+''''
 +nchar(10)+'    ,@isNotifyOnFailure = '    +convert(nvarchar(max),IsNotifyOnFailure)
 +nchar(10)+'    ,@isEnabled = '            +convert(nvarchar(max),IsEnabled)
-+nchar(10)+'    ,@isCachedRoleCheck = '    +convert(nvarchar(max),IsCachedRoleCheck)
+--+nchar(10)+'    ,@isCachedRoleCheck = '    +convert(nvarchar(max),IsCachedRoleCheck)
 +nchar(10)+'    ,@isDeleted = '            +convert(nvarchar(max),IsDeleted)
     from (
         select TaskId,
@@ -62,7 +62,7 @@ begin;
                NotifyOnFailureOperator,
                IsNotifyOnFailure,
                IsEnabled,
-               IsCachedRoleCheck,
+--               IsCachedRoleCheck,
                IsDeleted
         from scheduler.Task 
         for system_time as of @asof

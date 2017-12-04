@@ -1,4 +1,4 @@
-Jump To [Uninstallation](#uninstallation)
+Jump To [Uninstallation](#uninstallation) | [DEV Installation](#development-installation)
 
 # Deployment
 
@@ -79,6 +79,10 @@ Import-Module .\Modules\tsqlscheduler
 Install-SchedulerSolution -Server primaryNode -Database Utility -agMode $false
 Install-AutoUpsertJob -Server primaryNode -Database Utility -TargetDatabase Utility -NotifyOperator "Test Operator"
 ```
+
+# Development Installation 
+
+If you have Development environment that is not a member of an AG, you may force execution of tasks in this environment by updating the [`GetCachedAvailabilityGroupRole()`](../src/Functions/GetCachedAvailabilityGroupRole.sql#L15) function to `return coalesce(@role, N'PRIMARY');`. This is the minimum surface area change to force execution in a non-AG environment meant to mimic a production AG installation.
 
 # Uninstallation
 

@@ -7,7 +7,7 @@
     ,[string][parameter(mandatory=$true)] $notifyOperator
 )
 
-Install-SchedulerSolution -Server $server -Database $agDatabase -agMode $true -AvailabilityGroup $agName
+Install-SchedulerSolution -Server $server -Database $agDatabase -agMode $true -AvailabilityGroup $agName -verbose
 
 foreach($replica in $replicas){
     $serverName = $replica.Name

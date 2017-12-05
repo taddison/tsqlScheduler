@@ -31,6 +31,8 @@ While the Scheduler is developed for use in an AG environment, it is possible to
 - Open a powershell session and change to the `src` folder
 - Execute `..\deploy\deploy "Single Instance"` 
 
+Jump to: [Removing the Scheduler](deploy/README.md#uninstallation)
+
 ## Notes and Requirements
 
 - SQL 2016 is required

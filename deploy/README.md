@@ -88,4 +88,12 @@ If you have Development environment that is not a member of an AG, you may force
 
 Server objects can be removed with the [RemoveAllObjects](../src/RemoveAllObjects.sql) SQL script.  Note that this will remove the objects but not any SQL Agent jobs which have been created.
 
-You can also execute the Powershell command `UnInstall-SchedulerSolution` and specify the Server and Database to remove all objects including Agent Jobs. 
+## AG Mode Removal
+
+After importing the module, you can execute the Powershell command `UnInstall-SchedulerSolution` and specify the Server and Database to remove all objects including Agent Jobs. Schedulers for other AGs on these replicas should remain unaffected by this unless you've done something funky (like setting this AG's HADB as the local anchor for another AG :grimacing:). 
+
+## Local Installation Removal
+
+After importing the module, you can execute the Powershell command `UnInstall-SchedulerSolution -agMode $false`. You will be prompted for the name of the server and database on which you wish to remove the scheduler. 
+
+ 

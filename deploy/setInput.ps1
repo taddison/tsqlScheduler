@@ -27,7 +27,7 @@ $global:agDatabase=$null
 $global:server=$null
 $global:database=$null
 $global:notifyOperator=$null
-
+# set var values from config
 ..\deploy\tryParseVars
 
 if($agMode){

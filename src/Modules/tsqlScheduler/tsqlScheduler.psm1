@@ -124,37 +124,52 @@ Function UnInstall-SchedulerSolution
     Param (
         [string] $agName
         ,[boolean] $agMode=$true
-        ,[string] $Server
-        ,[string] $Database
     )
+
+    ..\deploy\setInput -agMode $agMode -agName $agName
 
     $setTaskDeletedQuery = "update scheduler.task set IsDeleted = 1;"
     $deleteAllHAJobsQuery = "exec scheduler.UpsertJobsForAllTasks;"
     $removeAllObjectsQuery = Get-Content "RemoveAllObjects.sql" | Out-String
 
     if($agMode){
-        ..\deploy\setInput -agMode $agMode -agName $agName
-        $deleteLocalUpsertJobQuery="update top(1) scheduler.task set IsDeleted = 1 where Identifier='$Database-$agDatabase-UpsertJobsForAllTasks';"
-    }
+        Write-Host "Uninstalling HA Scheduler from AG [$agName]"
+        Write-Verbose $ag
+        Start-Sleep 5
 
-    if($agMode){
-        $Server=($replicas | Where-Object "Role" -eq "Primary").Name
+        $deleteLocalUpsertJobQuery="update top(1) scheduler.task set IsDeleted = 1 where Identifier='$Database-$agDatabase-UpsertJobsForAllTasks';"
+        
+        Write-Verbose ">>>>>>> $server"
+        Write-Verbose ">>>>>>> $agDatabase"
+        Write-Verbose "--------------------------------------------------------------------" 
+
         Write-Verbose $setTaskDeletedQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $agDatabase -Query $setTaskDeletedQuery
 
-        foreach($replica in $replicas){
-            Write-Verbose $_.Name
-            Write-Verbose $agDatabase
-            Invoke-SqlCmd -ServerInstance $replica.Name -Database $agDatabase -Query $deleteAllHAJobsQuery
-            Write-Verbose $Database
-            Invoke-SqlCmd -ServerInstance $replica.Name -Database $Database -Query $deleteLocalUpsertJobQuery
+        Write-Verbose "--------------------------------------------------------------------" 
+
+        foreach($r in $replicas){
+            $srv = $r.Name
+            
+            Write-Verbose ">>>>>>> $srv"
+            
+            Write-Verbose ">>>>>>> $Database"
+            Write-Verbose $deleteLocalUpsertJobQuery"`n"
+            Invoke-SqlCmd -ServerInstance $srv -Database $Database -Query $deleteLocalUpsertJobQuery
+
+            Write-Verbose ">>>>>>> $agDatabase"
+            Write-Verbose $deleteAllHAJobsQuery"`n" 
+            Invoke-SqlCmd -ServerInstance $srv -Database $agDatabase -Query $deleteAllHAJobsQuery
         }
 
-        Write-Verbose "Removing all objects..."
+        Write-Verbose "Removing all objects...`n"
         Invoke-SqlCmd -ServerInstance $Server -Database $agDatabase -Query $removeAllObjectsQuery
     }else{ 
-        Write-Verbose $Server
-        Write-Verbose $Database
+        Write-Host "Uninstalling Local Scheduler from Server [$server], DB [$database]"
+        Start-Sleep 5
+
+        Write-Verbose ">>>>>>> $server"
+        Write-Verbose ">>>>>>> $database"
         Write-Verbose $setTaskDeletedQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $setTaskDeletedQuery
         Write-Verbose $deleteAllHAJobsQuery
@@ -162,6 +177,8 @@ Function UnInstall-SchedulerSolution
         Write-Verbose "Removing all objects..."
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $removeAllObjectsQuery
     }
+
+    Write-Verbose "--------------------------------------------------------------------" 
 }
 
 Export-ModuleMember Install-SchedulerSolution

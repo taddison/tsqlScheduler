@@ -191,13 +191,12 @@ Function Publish-TaskFromConfig
         ,[string] $action = 'INSERT'
     )
 
-    $task = Get-Content $taskpath | ConvertFrom-Json
+    $task = Get-Content $config | ConvertFrom-Json
     
 # Invoke-SQLCmd sucks for parameterization & Json is a text bomb so...
 
     $upsertTaskQuery = "
 exec scheduler.UpsertTask
-    @taskId = @taskId,
     @action = @action,
     @jobIdentifier = @jobIdentifier,
     @tsqlCommand = @tsqlCommand,
@@ -209,6 +208,7 @@ exec scheduler.UpsertTask
     @isEnabled = @isEnabled,
     @isDeleted = @isDeleted;"
 
+# @taskId = @taskId,
 # @overwriteExisting = @overwriteExisting;
 
     $connStr = "Server=$server;Initial Catalog=$database;Integrated Security=True"
@@ -220,7 +220,7 @@ exec scheduler.UpsertTask
     $upsertTaskCmd.CommandText = $upsertTaskQuery
     
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@action",[Data.SQLDBType]::VarChar,6))).value = $action
-    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@taskID",[Data.SQLDBType]::Int))).value = $task.taskId
+    #$upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@taskID",[Data.SQLDBType]::Int))).value = $task.taskId
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@jobIdentifier",[Data.SQLDBType]::NVarChar,128))).value = $task.Identifier
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@tsqlCommand",[Data.SQLDBType]::NVarChar,-1))).value = $task.TSQLCommand
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@StartTime",[Data.SQLDBType]::Time,5))).value = $task.StartTime

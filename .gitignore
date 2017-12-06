@@ -1,4 +1,7 @@
 
 deploy/servers/*
 !deploy/servers/AG1-sample.json
-!deploy/servers/README.md
+!deploy/*/README.md
+
+deploy/tasks/*
+!deploy/tasks/*/Sample_Task.json

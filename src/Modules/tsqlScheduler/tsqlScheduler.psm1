@@ -181,7 +181,66 @@ Function UnInstall-SchedulerSolution
     Write-Verbose "--------------------------------------------------------------------" 
 }
 
+Function Publish-TaskFromConfig
+{
+    [cmdletbinding()]
+    Param (
+        [string] $config
+        ,[string] $server
+        ,[string] $database
+        ,[string] $action = 'INSERT'
+    )
+
+    $task = Get-Content $taskpath | ConvertFrom-Json
+    
+# Invoke-SQLCmd sucks for parameterization & Json is a text bomb so...
+
+    $upsertTaskQuery = "
+exec scheduler.UpsertTask
+    @taskId = @taskId,
+    @action = @action,
+    @jobIdentifier = @jobIdentifier,
+    @tsqlCommand = @tsqlCommand,
+    @startTime = @startTime,
+    @frequencyTypeDesc = @frequencyTypeDesc,
+    @frequencyInterval = @frequencyInterval,
+    @notifyOperator = @notifyOperator,
+    @isNotifyOnFailure = @isNotifyOnFailure,
+    @isEnabled = @isEnabled,
+    @isDeleted = @isDeleted;"
+
+# @overwriteExisting = @overwriteExisting;
+
+    $connStr = "Server=$server;Initial Catalog=$database;Integrated Security=True"
+    $conn=new-object System.Data.SqlClient.SqlConnection $connStr
+    $conn.open()
+
+    $upsertTaskCmd = New-Object System.Data.SqlClient.SqlCommand
+    $upsertTaskCmd.Connection = $conn
+    $upsertTaskCmd.CommandText = $upsertTaskQuery
+    
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@action",[Data.SQLDBType]::VarChar,6))).value = $action
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@taskID",[Data.SQLDBType]::Int))).value = $task.taskId
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@jobIdentifier",[Data.SQLDBType]::NVarChar,128))).value = $task.Identifier
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@tsqlCommand",[Data.SQLDBType]::NVarChar,-1))).value = $task.TSQLCommand
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@StartTime",[Data.SQLDBType]::Time,5))).value = $task.StartTime
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@FrequencyTypeDesc",[Data.SQLDBType]::VarChar,6))).value = $task.FrequencyTypeDesc
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@FrequencyInterval",[Data.SQLDBType]::SmallInt))).value = $task.FrequencyInterval
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@NotifyOperator",[Data.SQLDBType]::NVarChar,128))).value = $task.NotifyOnFailureOperator
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@IsNotifyOnFailure",[Data.SQLDBType]::Bit))).value = $task.IsNotifyOnFailure
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@IsEnabled",[Data.SQLDBType]::Bit))).value = $task.IsEnabled
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@IsDeleted",[Data.SQLDBType]::Bit))).value = $task.IsDeleted
+    #$upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@overwriteExisting",[Data.SQLDBType]::Bit))).value = 1
+
+    $upsertTaskCmd.Prepare()
+    $upsertTaskCmd.ExecuteNonQuery() | Out-Null
+    
+    $upsertTaskCmd.Parameters.Clear()
+    $conn.Close()
+}
+
 Export-ModuleMember Install-SchedulerSolution
 Export-ModuleMember Install-AutoUpsertJob
 Export-ModuleMember Install-ReplicaStatusJob
 Export-ModuleMember UnInstall-SchedulerSolution
+Export-ModuleMember Publish-TaskFromConfig

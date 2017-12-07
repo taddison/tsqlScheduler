@@ -37,15 +37,16 @@ Jump to: [Removing the Scheduler](deploy/README.md#uninstallation)
 
 - SQL 2016 is required
 - [The server time must be UTC](#server-time)
-- All requisite DBs must be created and added to the AG as necessary before installation or uninstallation.  
+- The replica must be configured as a [readable secondary][readable-secondary] 
+- All requisite DBs must be created and added to the AG as necessary before installation.  
 - Deployment scripts use integrated security.  Use of SQL Logins has not been tested but can be attempted but adding the appropriate [`Invoke-SqlCmd`][invoke-sqlcmd - BOL] flags in the [tsqlScheduler module](src/Modulers/tsqlScheduler/tsqlScheduler.psm1) and [deploying manually](deploy/README.md).
 - Task names (`@jobIdentifier`) should match the pattern `$ownLocation-$target-$task`
-- Consider environment. Tasks in the HA scheduler with any dependencies outside the AG may not succeed after failover unless the dependencies are already available at the failover location.
-- On the event of failover, currently running HA Jobs may forcibly fail.  
+- Consider environment. Tasks in the HA scheduler with any dependencies outside the AG may not succeed after failover unless all dependencies are already available at the failover location.
+- At time of failover, currently running HA Jobs may forcibly fail.  
 
 ## Managing Tasks
 
-Jobs are managed via rows in the scheduler.Task table. Use the [`UpsertTask`](src/Procedures/UpsertTask.sql) proc to create, modify, or delete a task. To retrieve the current values for a task & make incremental modifications, you may use the [`GetTask`](src/Procedures/GetTask.sql) proc.
+Jobs are managed via rows in the scheduler.Task table. Use the [`UpsertTask`](src/Procedures/UpsertTask.sql) proc to create, modify, or delete a task. To retrieve the current values for a task & make incremental modifications, you may use the [`GetTask`](src/Procedures/GetTask.sql) proc. You can also maintain a separate repository with configuration files and publish tasks [as described here](deploy/tasks/README.md).  
 
 Usage of `UpsertTask` is demonstrated below.
 
@@ -147,3 +148,4 @@ The `RecordReplicaStatus` job is created on installation and runs to periodicall
 [sysjobs - BOL]: https://docs.microsoft.com/en-us/sql/relational-databases/system-tables/dbo-sysjobs-transact-sql
 [context_info - BOL]: https://docs.microsoft.com/en-us/sql/t-sql/functions/context-info-transact-sql
 [invoke-sqlcmd - BOL]: https://docs.microsoft.com/en-us/sql/powershell/invoke-sqlcmd-cmdlet
+[readable-secondary]: https://docs.microsoft.com/en-us/sql/database-engine/availability-groups/windows/active-secondaries-readable-secondary-replicas-always-on-availability-groups

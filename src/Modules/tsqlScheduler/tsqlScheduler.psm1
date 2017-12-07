@@ -131,6 +131,7 @@ Function UnInstall-SchedulerSolution
     $setTaskDeletedQuery = "update scheduler.task set IsDeleted = 1;"
     $deleteAllHAJobsQuery = "exec scheduler.UpsertJobsForAllTasks;"
     $removeAllObjectsQuery = Get-Content "RemoveAllObjects.sql" | Out-String
+    $disableStopAllJosQuery = Get-Content "HardStop.sql" | Out-String
 
     if($agMode){
         Write-Host "Uninstalling HA Scheduler from AG [$agName]"
@@ -145,6 +146,8 @@ Function UnInstall-SchedulerSolution
 
         Write-Verbose $setTaskDeletedQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $agDatabase -Query $setTaskDeletedQuery
+        Write-Verbose "Disabling and stopping all jobs in the scheduler..."
+        Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $disableStopAllJosQuery
 
         Write-Verbose "--------------------------------------------------------------------" 
 
@@ -172,6 +175,8 @@ Function UnInstall-SchedulerSolution
         Write-Verbose ">>>>>>> $database"
         Write-Verbose $setTaskDeletedQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $setTaskDeletedQuery
+        Write-Verbose "Disabling and stopping all jobs in the scheduler..."
+        Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $disableStopAllJosQuery
         Write-Verbose $deleteAllHAJobsQuery
         Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $deleteAllHAJobsQuery
         Write-Verbose "Removing all objects..."
@@ -191,7 +196,7 @@ Function Publish-TaskFromConfig
         ,[string] $action = 'INSERT'
     )
 
-    $task = Get-Content $config | ConvertFrom-Json
+    $task = Get-Content -LiteralPath $config | ConvertFrom-Json
     
 # Invoke-SQLCmd sucks for parameterization & Json is a text bomb so...
 

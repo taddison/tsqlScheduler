@@ -7,18 +7,24 @@
     ,[string][parameter(mandatory=$true)] $notifyOperator
 )
 
-Install-SchedulerSolution -Server $server -Database $agDatabase -agMode $true -AvailabilityGroup $agName -verbose
+$query = "select oid = isnull(object_id('scheduler.Task'),-1)"
+$validation = Invoke-Sqlcmd -ServerInstance $serverName -Database $database -Query $query
+if($validation.oid -eq -1){
+    Install-SchedulerSolution -Server $server -Database $agDatabase -agMode $true -AvailabilityGroup $agName -verbose
+}else{
+    Write-Verbose "HA Scheduler already exists. Bumping Version..."
+    Install-SchedulerSolution -Server $server -Database $agDatabase -agMode $true -AvailabilityGroup $agName -versionBump $true -verbose
+}
 
 foreach($replica in $replicas){
     $serverName = $replica.Name
 
-    $query = "select oid = isnull(object_id('scheduler.Task'),-1)"
     $validation = Invoke-Sqlcmd -ServerInstance $serverName -Database $database -Query $query
 
     if($validation.oid -eq -1){
         Install-SchedulerSolution -server $serverName -database $database -agMode $false -verbose
     }else{
-        # nonbreaking update functions/views/procs on local DB at redeploy
+        Write-Verbose "Local Scheduler already exists. Bumping Version..."
         Install-SchedulerSolution -server $serverName -database $database -agMode $false -versionBump $true -verbose
     }
 

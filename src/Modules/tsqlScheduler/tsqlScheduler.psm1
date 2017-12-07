@@ -112,7 +112,8 @@ exec scheduler.UpsertTask
     @frequencyType = 3, 
     @frequencyInterval = 1, 
     @notifyOperator = '$NotifyOperator', 
-    @isNotifyOnFailure = 0;"
+    @isNotifyOnFailure = 0,
+    @overwriteExisting = 1;"
 
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query $query
     Invoke-SqlCmd -ServerInstance $Server -Database $Database -Query "exec scheduler.CreateJobFromTask @identifier = '$jobIdentifier', @overwriteExisting = 1;"

@@ -4,5 +4,13 @@
     ,[string][parameter(mandatory=$true)] $notifyOperator
 )
 
-Install-SchedulerSolution -Server $server -Database $database -agMode $false -verbose
+$query = "select oid = isnull(object_id('scheduler.Task'),-1)"
+$validation = Invoke-Sqlcmd -ServerInstance $server -Database $database -Query $query
+
+if($validation.oid -eq -1){
+    Install-SchedulerSolution -Server $server -Database $database -agMode $false -verbose
+}else{
+    Install-SchedulerSolution -Server $server -Database $database -agMode $false -versionBump $true -verbose
+}
+
 Install-AutoUpsertJob -Server $server -Database $database -TargetDatabase $database -NotifyOperator $notifyOperator

@@ -211,10 +211,10 @@ exec scheduler.UpsertTask
     @notifyOperator = @notifyOperator,
     @isNotifyOnFailure = @isNotifyOnFailure,
     @isEnabled = @isEnabled,
-    @isDeleted = @isDeleted;"
+    @isDeleted = @isDeleted,
+    @overwriteExisting = @overwriteExisting;"
 
 # @taskId = @taskId,
-# @overwriteExisting = @overwriteExisting;
 
     $connStr = "Server=$server;Initial Catalog=$database;Integrated Security=True"
     $conn=new-object System.Data.SqlClient.SqlConnection $connStr
@@ -235,7 +235,7 @@ exec scheduler.UpsertTask
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@IsNotifyOnFailure",[Data.SQLDBType]::Bit))).value = $task.IsNotifyOnFailure
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@IsEnabled",[Data.SQLDBType]::Bit))).value = $task.IsEnabled
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@IsDeleted",[Data.SQLDBType]::Bit))).value = $task.IsDeleted
-    #$upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@overwriteExisting",[Data.SQLDBType]::Bit))).value = 1
+    $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@overwriteExisting",[Data.SQLDBType]::Bit))).value = 1
 
     $upsertTaskCmd.Prepare()
     $upsertTaskCmd.ExecuteNonQuery() | Out-Null

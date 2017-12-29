@@ -54,7 +54,7 @@ if($selection -eq 1) {
     }
 }else{
     $agMode = $false
-    $agName = "x"
+    $agName = "No_agName__AG_Mode_Is_False"
     $message = "Deploying to a SINGLE INSTANCE...`n
 Please get your Server Name ready..."
 }

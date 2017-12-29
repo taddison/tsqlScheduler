@@ -1,6 +1,4 @@
-﻿# This is a STUB
-# TODO: complete & test
-Write-Host "`nConfig file for [$agName] not found in deploy/servers. Attempting to auto-generate now."
+﻿Write-Host "`nConfig file for [$agName] not found in deploy/servers. Attempting to auto-generate now."
 $global:server=Read-Host "Enter the name of the primary replica for [$agName]."
 $notifyOperator=Read-Host "Enter the name of the operator"
 $database=Read-Host "Enter the name of the database to host the local scheduler"
@@ -35,3 +33,7 @@ $outFile = "..\deploy\servers\$agName.json"
 Invoke-Sqlcmd -ServerInstance $server -Database master -Query $sqlParseAG | Out-File $outFile -Encoding ascii -Width 9001
 #trim off headers from sql query
 (Get-Content $outfile | Select-Object -Skip 3) | Set-Content $outfile
+
+# TODO?
+# open new config file in default text editor after creation...
+# ...and/or suggest prettification to user

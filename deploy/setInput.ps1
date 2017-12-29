@@ -11,7 +11,7 @@ if($agMode){
     }else{
         $global:agName=$agName
     }
-}else{$global:agName="x"} # dummy non-zero string for testInput
+}else{$global:agName="No_agName__AG_Mode_Is_False"} # dummy non-zero string for testInput
 
 if($agMode){
     $configFileExists=Test-Path ..\deploy\servers\$agName.json
@@ -20,7 +20,7 @@ if($agMode){
 if($agMode){$global:ag = Get-Content ..\deploy\servers\$agName.json | ConvertFrom-Json}
 if($agMode){
     $global:replicas = $ag.replicas | Where-Object {$_.IsSchedulerExcluded -ne $true}
-}else{$global:replicas="x"}
+}else{$global:replicas="No_Replicas__AG_Mode_Is_False"}
 
 # initialize vars
 $global:agDatabase=$null

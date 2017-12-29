@@ -215,8 +215,6 @@ exec scheduler.UpsertTask
     @isDeleted = @isDeleted,
     @overwriteExisting = @overwriteExisting;"
 
-# @taskId = @taskId,
-
     $connStr = "Server=$server;Initial Catalog=$database;Integrated Security=True"
     $conn=new-object System.Data.SqlClient.SqlConnection $connStr
     $conn.open()
@@ -226,7 +224,6 @@ exec scheduler.UpsertTask
     $upsertTaskCmd.CommandText = $upsertTaskQuery
     
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@action",[Data.SQLDBType]::VarChar,6))).value = $action
-    #$upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@taskID",[Data.SQLDBType]::Int))).value = $task.taskId
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@jobIdentifier",[Data.SQLDBType]::NVarChar,128))).value = $task.Identifier
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@tsqlCommand",[Data.SQLDBType]::NVarChar,-1))).value = $task.TSQLCommand
     $upsertTaskCmd.Parameters.Add((New-Object Data.SqlClient.SqlParameter("@StartTime",[Data.SQLDBType]::Time,5))).value = $task.StartTime

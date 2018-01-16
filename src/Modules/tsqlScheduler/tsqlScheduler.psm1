@@ -29,7 +29,9 @@ Function Install-SchedulerSolution
 create or alter function scheduler.GetDatabase()
 returns sysname
 as
-return '$database';
+begin;
+    return '$database';
+end;
 "@
     Invoke-SqlCmd -ServerInstance $server -Database $database -Query $dbFunction
 
@@ -42,13 +44,13 @@ return '$database';
 # credit to https://stackoverflow.com/a/5429048/4709762
         $ToNatural = { [regex]::Replace($_, '\d+', { $args[0].Value.PadLeft(20) }) }
 
-        gci ..\deploy\patchfiles | Where-Object {$_.Name -gt $version} | Sort-Object $ToNatural | % {
+        gci ..\deploy\patchfiles -Directory | Where-Object {$_.Name -gt $version} | Sort-Object $ToNatural | % {
             gci $_.FullName -Recurse | % {
-                $f=gc $_.FullName -Raw
+                $f=$_.FullName
                 $n=$_.Name
-                Write-Verbose "Stateful migration script found to bump from verion '$version'"
+                Write-Verbose "Stateful migration script found to bump from version '$version'"
                 Write-Verbose "Deploying patchfile [$n] to [$server].[$database]"
-                Invoke-Sqlcmd -ServerInstance $server -Database $database -InputFile $f
+                Invoke-Sqlcmd -ServerInstance $server -Database $database -InputFile "$f"
             }
         }
     }

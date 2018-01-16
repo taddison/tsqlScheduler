@@ -25,6 +25,26 @@ Function Install-SchedulerSolution
     Write-Verbose ">>>>>>> $database"
     Write-Verbose "--------------------------------------------------------------------"
 
+    if($versionBump){
+        [decimal]$version=(Invoke-Sqlcmd `
+            -ServerInstance $server `
+            -Database $database `
+            -Query "select [Version] from scheduler.GetVersion()").Version
+        
+# credit to https://stackoverflow.com/a/5429048/4709762
+        $ToNatural = { [regex]::Replace($_, '\d+', { $args[0].Value.PadLeft(20) }) }
+
+        gci ..\deploy\patchfiles | Where-Object {$_.Name -gt $version} | Sort-Object $ToNatural | % {
+            gci $_.FullName -Recurse | % {
+                $f=gc $_.FullName -Raw
+                $n=$_.Name
+                Write-Verbose "Stateful migration script found to bump from verion '$version'"
+                Write-Verbose "Deploying patchfile [$n] to [$server].[$database]"
+                Invoke-Sqlcmd -ServerInstance $server -Database $database -InputFile $f
+            }
+        }
+    }
+    
     $files | foreach-object { 
         Write-Verbose $_.fileName
         Invoke-SqlCmd -ServerInstance $server -Database $database -InputFile $_.fileName 
@@ -55,7 +75,6 @@ Function Install-SchedulerSolution
 "@
         Invoke-SqlCmd -ServerInstance $server -Database $database -Query $availabilityGroupFunction
     }
-    
 }
 
 Function Install-AutoUpsertJob 

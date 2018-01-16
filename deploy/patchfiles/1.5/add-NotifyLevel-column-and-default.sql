@@ -2,9 +2,6 @@ if col_length(N'scheduler.Task',N'NotifyLevelEventlog') is null
     alter table scheduler.Task add NotifyLevelEventlog int not null default 2
 go
 
-alter table scheduler.Task alter column NotifyLevelEventlog int not null;
-go
-
 if exists( select * 
             from sys.default_constraints dc
             where dc.parent_object_id = object_id(N'scheduler.Task',N'U')

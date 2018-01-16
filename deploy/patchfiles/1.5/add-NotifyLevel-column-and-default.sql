@@ -12,8 +12,8 @@ begin;
 
     if exists( select * 
                from sys.default_constraints dc
-               where dc.[object_id] = object_id(N'scheduler.Task',N'U')
-                   and dc.parent_column_id = columnproperty(object_id(N'scheduler.Task',N'U'),'NotifyLevelEventlog','ColumnId') )
+               where dc.parent_object_id = object_id(N'scheduler.Task',N'U')
+                   and dc.parent_column_id = try_convert(int,columnproperty(object_id(N'scheduler.Task',N'U'),'NotifyLevelEventlog','ColumnId')))
     begin; -- default exists, ensure accuracy
         declare @dSql nvarchar(max);
         select @dSql='alter table scheduler.Task drop constraint ['+dc.[name]+'];'+char(10)

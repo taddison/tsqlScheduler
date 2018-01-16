@@ -25,6 +25,14 @@ Function Install-SchedulerSolution
     Write-Verbose ">>>>>>> $database"
     Write-Verbose "--------------------------------------------------------------------"
 
+    $dbFunction = @"
+create or alter function scheduler.GetDatabase()
+returns sysname
+as
+return '$database';
+"@
+    Invoke-SqlCmd -ServerInstance $server -Database $database -Query $dbFunction
+
     if($versionBump){
         [decimal]$version=(Invoke-Sqlcmd `
             -ServerInstance $server `

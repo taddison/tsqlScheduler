@@ -31,3 +31,43 @@ Hey presto, you've now copied all the tasks in this repo to your dev server! :gr
 ![](../../doc/img/tasks-config-based-deployment.png)
 
 Using config-based deployment & keeping a separate repository for your task configs allows you to extend task management to developers and other users without over-privileging. Keep your tasks in private repository and allow users to open a PR when they wish to add/update/delete tasks. Deployment to targeted environments is still bottleneck through an appropriately-permissioned connection. 
+
+### But what if a highly-privileged ne'er-do-well edits tasks outside my config repo?! :scream:    
+
+As noted above:
+
+> The config files can be generated from pre-existing rows in the database by querying the [`TaskConfig`](../../src/Views/TaskConfig.sql) view. However, extracting via this method will provide a one-line/non-prettified json blob.
+
+You can update your config repo based on the task state in the DB. You will likely want to prettify the `json` prior to committing any changes to make sense of the diff. <sup>_May I recommend [`js-beautify`](https://github.com/beautify-web/js-beautify) for procedural prettification?_</sup>
+
+If need be, you can periodically sync your repo from the DB using a method similar to the below:
+
+```powershell
+$srv = "SQL-Dev-1"
+$db = "Utility"
+$fPath = "c:\git\my-tasks\"
+$getTasksQ = @"select * from scheduler.TaskConfig;"@ # or customize as prefered  
+
+$allTasks = (Invoke-Sqlcmd -ServerInstance $srv -Database $db -Query $getTasksQ)
+
+foreach($t in $allTasks){
+    $fName = $t.Identifier
+    $fName = "$fPath\$fName.json"
+    
+    $config = $t.Config
+
+    Set-Content -LiteralPath $fName -Value $config
+# and if you've got JS-BEAUTIFY loaded...
+    $config=(js-beautify "$fName")
+    Set-Content -LiteralPath $fName -Value $config 
+}
+
+# delete from disk tasks that have been deleted in DB
+$onDiskTasks = (gci $fPath -Filter "*.json")
+
+$onDiskTasks | Where-Object {
+    ($_.Name).Replace(".json","") -notin $allTasks.Identifier
+} | rm
+```
+
+

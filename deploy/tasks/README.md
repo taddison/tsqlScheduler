@@ -38,9 +38,7 @@ As noted above:
 
 > The config files can be generated from pre-existing rows in the database by querying the [`TaskConfig`](../../src/Views/TaskConfig.sql) view. However, extracting via this method will provide a one-line/non-prettified json blob.
 
-You can update your config repo based on the task state in the DB. You will likely want to prettify the `json` prior to committing any changes to make sense of the diff. <sup>_May I recommend [`js-beautify`](https://github.com/beautify-web/js-beautify) for procedural prettification?_</sup>
-
-If need be, you can periodically sync your repo from the DB using a method similar to the below:
+You can update your config repo based on the task state in the DB using a method similar to the below:
 
 ```powershell
 $srv = "SQL-Dev-1"
@@ -56,12 +54,16 @@ foreach($t in $allTasks){
     
     $config = $t.Config
 
-    Set-Content -LiteralPath $fName -Value $config
-# and if you've got JS-BEAUTIFY loaded...
-    $config=(js-beautify "$fName")
+# the json comes out of the DB un-prettified, this helps  
+	$config= ($config | ConvertFrom-Json | ConvertTo-Json)
+
     Set-Content -LiteralPath $fName -Value $config 
 }
+```
 
+Optionally you can also hard-delete old tasks. Do this only **after** publishing the deletion to all environments by appending the below snippet to the above script.
+
+```powershell
 # delete from disk tasks that have been deleted in DB
 $onDiskTasks = (gci $fPath -Filter "*.json")
 
@@ -69,5 +71,4 @@ $onDiskTasks | Where-Object {
     ($_.Name).Replace(".json","") -notin $allTasks.Identifier
 } | rm
 ```
-
 

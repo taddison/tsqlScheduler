@@ -19,7 +19,7 @@ Managing your tasks in this way provides for simplified management of parity bet
 ```powershell
 $srv = "SQL-Dev-1"
 $db = "Utility"
-$tasks = Get-ChildItem -Filter *.tasks.json | Select Name
+$tasks = Get-ChildItem -Filter *.task.json | Select Name
 
 foreach($t in $tasks){
     Publish-TaskFromConfig -config $t.Name -server $srv -Database $db

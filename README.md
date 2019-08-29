@@ -1,3 +1,5 @@
+# Migrated to [DBTrenches/tsqlscheduler](https://www.github.com/dbtrenches/tsqlscheduler)
+
 ##### [Installation](#installation) | [Notes & Requirements](#notes-and-requirements) | [Managing Tasks](#managing-tasks) | [Monitoring](#monitoring) | [How It Works](#how-it-works)
 
 # tsqlScheduler
